@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimi K2 交互式深度剖析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Light neutrals with muted blue/teal accents) -->
+    <!-- Application Structure Plan: A single-page dashboard with sticky navigation to six thematic sections: Overview, Tech Deep Dive, Performance Showdown, Strategy, Cost, and Summary. This non-linear structure allows developers to directly access the information most relevant to them. Key interactions include dynamic charts, a clickable diagram, and a 'model recommender' tool, transforming passive text into an active exploration and decision-making experience. -->
+    <!-- Visualization & Content Choices: 1. Benchmarks Table -> Goal: Compare -> Viz: Interactive Bar Chart (Chart.js) with dropdown filter. 2. Cost Table -> Goal: Compare/Calculate -> Viz: Bar Chart (Chart.js) + JS calculator. 3. Technical Concepts -> Goal: Inform -> Viz: Clickable HTML/CSS diagram. 4. Strategy Guide -> Goal: Guide Decision -> Viz: Interactive 'model recommender' tool. 5. Summary -> Goal: Synthesize -> Viz: Two-column Pros/Cons list. Justification: Provides a quick, scannable final verdict. Confirmed NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 60vh;
+            }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0891b2; /* cyan-600 */
+            border-bottom-color: #0891b2;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-md">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-slate-800">Kimi K2 交互式报告</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 border-b-2 border-transparent">总览</a>
+                        <a href="#tech" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 border-b-2 border-transparent">技术揭秘</a>
+                        <a href="#performance" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 border-b-2 border-transparent">性能对决</a>
+                        <a href="#strategy" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 border-b-2 border-transparent">应用策略</a>
+                        <a href="#cost" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 border-b-2 border-transparent">成本分析</a>
+                        <a href="#summary" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 border-b-2 border-transparent">最终裁决</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5">
+                        <option value="#overview">总览</option>
+                        <option value="#tech">技术揭秘</option>
+                        <option value="#performance">性能对决</option>
+                        <option value="#strategy">应用策略</option>
+                        <option value="#cost">成本分析</option>
+                        <option value="#summary">最终裁决</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="scroll-mt-20 mb-16 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-cyan-700 mb-4">Kimi K2：为 Java 工程师打造的 Agentic Powerhouse？</h2>
+            <p class="max-w-3xl mx-auto text-slate-600 text-lg">
+                欢迎来到 AI Agent 的新时代！我们正从代码的构建者，转变为智能体的指挥家。这份交互式报告将深入剖析备受瞩目的新星 Kimi K2，通过与全球顶尖模型的硬核对比和真实案例，探索它是否是我们构建下一代智能应用所需的终极利器。
+            </p>
+            <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300">
+                    <div class="text-4xl mb-3">🚀</div>
+                    <h3 class="text-xl font-bold mb-2">Agentic-First</h3>
+                    <p class="text-slate-500">Kimi 的核心设计哲学：为“行动”而生，而非“对话”。它天生就被训练来执行命令、调用工具，是构建自动化工作流的理想选择。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300">
+                     <div class="text-4xl mb-3">💰</div>
+                    <h3 class="text-xl font-bold mb-2">成本效益</h3>
+                    <p class="text-slate-500">极具竞争力的定价，让高频、重度的 Agentic 循环任务在经济上成为可能，将许多因成本过高而搁浅的想法变为现实。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300">
+                     <div class="text-4xl mb-3">⚙️</div>
+                    <h3 class="text-xl font-bold mb-2">多模型策略</h3>
+                    <p class="text-slate-500">告别“一个模型打天下”的时代。了解如何将 Kimi 的“反应式”能力与其它模型的“深思”能力结合，构建更强大的 AI 系统。</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-slate-200">
+
+        <section id="tech" class="scroll-mt-20 mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">深入技术腹地</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">Kimi K2 的“万亿参数”标签背后，是一套精巧的架构设计。点击下方卡片，探索其核心技术，了解这头巨兽的心脏是如何高效跳动的。</p>
+            </div>
+            <div id="tech-interactive" class="relative max-w-4xl mx-auto p-4">
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                    <div data-tech="moe" class="tech-card cursor-pointer p-6 bg-white rounded-xl shadow-lg border-2 border-transparent hover:border-cyan-500 hover:shadow-xl transition-all duration-300">
+                        <h3 class="text-xl font-bold">混合专家 (MoE) 架构</h3>
+                        <p class="text-sm text-slate-500 mt-2">点击查看详情</p>
+                    </div>
+                    <div data-tech="muonclip" class="tech-card cursor-pointer p-6 bg-white rounded-xl shadow-lg border-2 border-transparent hover:border-cyan-500 hover:shadow-xl transition-all duration-300">
+                        <h3 class="text-xl font-bold">MuonClip 优化器</h3>
+                        <p class="text-sm text-slate-500 mt-2">点击查看详情</p>
+                    </div>
+                    <div data-tech="pipeline" class="tech-card cursor-pointer p-6 bg-white rounded-xl shadow-lg border-2 border-transparent hover:border-cyan-500 hover:shadow-xl transition-all duration-300">
+                        <h3 class="text-xl font-bold">Agentic 数据流水线</h3>
+                        <p class="text-sm text-slate-500 mt-2">点击查看详情</p>
+                    </div>
+                 </div>
+                 <div id="tech-details" class="mt-8 p-6 bg-cyan-50 rounded-lg min-h-[150px] flex items-center justify-center transition-opacity duration-500">
+                    <p class="text-slate-700 text-center">选择一个技术主题来查看介绍。</p>
+                 </div>
+            </div>
+        </section>
+        
+        <hr class="my-16 border-slate-200">
+
+        <section id="performance" class="scroll-mt-20 mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">巅峰对决</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">基准分数和真实案例是检验模型实力的试金石。通过下面的交互式图表和案例分析，直观感受 Kimi K2 与全球顶尖模型的实力差距。</p>
+            </div>
+            
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl mb-12">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-slate-700 mb-4 sm:mb-0">编程与推理能力基准测试</h3>
+                    <div>
+                        <label for="benchmark-select" class="sr-only">选择基准测试</label>
+                        <select id="benchmark-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5">
+                            <option value="swe_bench" selected>SWE-bench (Agentic 编码)</option>
+                            <option value="live_code">LiveCodeBench (现场编程)</option>
+                            <option value="aider">Aider-Polyglot (代码修复)</option>
+                            <option value="tool_use">Tool Use (工具使用)</option>
+                            <option value="math">Math (数学能力)</option>
+                            <option value="reasoning">Reasoning (推理能力)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="benchmarkChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-bold mb-3">案例: “青蛙过河”挑战</h4>
+                    <p class="text-slate-600 mb-4">一位开发者使用 Kimi K2 构建游戏的真实经历，揭示了其“聪明的头脑”与“笨拙的双手”并存的双重特性。</p>
+                    <div class="flex space-x-4">
+                        <div class="flex-1 bg-green-100 text-green-800 p-3 rounded-lg">
+                            <strong class="block">优点 👍</strong>
+                            准确理解需求，清晰分解逻辑，生成高质量的最终代码。
+                        </div>
+                        <div class="flex-1 bg-red-100 text-red-800 p-3 rounded-lg">
+                            <strong class="block">缺点 👎</strong>
+                            底层工具调用（如文件读写）反复出错，执行层面存在摩擦。
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-bold mb-3">案例: “薪酬仪表盘”传奇</h4>
+                    <p class="text-slate-600 mb-4">官方演示中，Kimi 完成了端到端数据分析任务，接收指令、分析数据、统计评估、最终生成一个交互式 HTML 仪表盘。</p>
+                     <div class="bg-blue-100 text-blue-800 p-3 rounded-lg">
+                        <strong class="block">亮点 ✨</strong>
+                        整个过程涉及超过 15 次无缝的工具调用，全程无需人工干预，完美展示了其作为自动化工作流引擎的潜力。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-slate-200">
+
+        <section id="strategy" class="scroll-mt-20 mb-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">应用策略与工作流</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">模型本身再强大，也需要正确的策略来发挥其最大价值。这里提供了实用的多模型工作流，并创建了一个交互式工具，帮助你根据任务选择最合适的模型。</p>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-xl mb-12">
+                <h3 class="text-2xl font-bold text-center mb-6">“二级火箭”协同工作流</h3>
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="text-center p-4 bg-slate-100 rounded-lg w-full md:w-1/3">
+                        <div class="text-3xl">🚀</div>
+                        <h4 class="font-bold mt-2">第一级: Kimi K2</h4>
+                        <p class="text-sm text-slate-600">执行广泛、信息密集型任务（资料搜集、初步整理），快速且廉价。</p>
+                    </div>
+                    <div class="text-3xl text-cyan-500 font-bold mx-4">+</div>
+                     <div class="text-center p-4 bg-slate-100 rounded-lg w-full md:w-1/3">
+                        <div class="text-3xl">🛰️</div>
+                        <h4 class="font-bold mt-2">第二级: Claude/Gemini</h4>
+                        <p class="text-sm text-slate-600">接收第一级产出的上下文，进行深度分析、洞察提取和决策。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-xl">
+                 <h3 class="text-2xl font-bold text-center mb-2">我该使用哪个模型?</h3>
+                 <p class="text-center text-slate-500 mb-6">从下方选择你的任务类型，我们会为你高亮推荐的模型。</p>
+                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                     <button data-task="kimi" class="task-btn p-4 bg-gray-200 rounded-lg hover:bg-cyan-100 transition">自动化工作流</button>
+                     <button data-task="claude" class="task-btn p-4 bg-gray-200 rounded-lg hover:bg-cyan-100 transition">复杂逻辑推理</button>
+                     <button data-task="gemini" class="task-btn p-4 bg-gray-200 rounded-lg hover:bg-cyan-100 transition">超长代码库分析</button>
+                     <button data-task="gpt" class="task-btn p-4 bg-gray-200 rounded-lg hover:bg-cyan-100 transition">创意文本与多模态</button>
+                 </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                    <div id="card-kimi" class="model-card p-4 border-2 border-gray-200 rounded-lg transition-all duration-300">
+                        <h4 class="font-bold text-lg">Kimi K2</h4>
+                        <p class="text-sm text-slate-600 mt-1">高性价比的“反应式”执行者，适合高吞吐量数据处理与 Agentic 任务。</p>
+                    </div>
+                    <div id="card-claude" class="model-card p-4 border-2 border-gray-200 rounded-lg transition-all duration-300">
+                        <h4 class="font-bold text-lg">Claude 3.5 Sonnet</h4>
+                        <p class="text-sm text-slate-600 mt-1">深思熟虑的“战略家”，拥有扩展思考能力，适合处理模糊和复杂问题。</p>
+                    </div>
+                    <div id="card-gemini" class="model-card p-4 border-2 border-gray-200 rounded-lg transition-all duration-300">
+                        <h4 class="font-bold text-lg">Gemini 1.5 Pro</h4>
+                        <p class="text-sm text-slate-600 mt-1">“代码库级”分析大师，凭借百万级上下文窗口处理海量信息。</p>
+                    </div>
+                    <div id="card-gpt" class="model-card p-4 border-2 border-gray-200 rounded-lg transition-all duration-300">
+                        <h4 class="font-bold text-lg">GPT-4o</h4>
+                        <p class="text-sm text-slate-600 mt-1">全能的多模态选手，在创意生成和插件生态方面表现卓越。</p>
+                    </div>
+                 </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-slate-200">
+
+        <section id="cost" class="scroll-mt-20">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">力量的代价</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">成本是生产环境落地的关键。这张图表直观地揭示了 Kimi K2 在成本上的巨大竞争力。你还可以使用下方的计算器估算你的任务成本。</p>
+            </div>
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl">
+                 <h3 class="text-2xl font-bold text-slate-700 text-center mb-6">主流模型成本对比 (美元 / 每百万 Tokens)</h3>
+                <div class="chart-container">
+                    <canvas id="costChart"></canvas>
+                </div>
+                <div class="mt-8 pt-6 border-t border-slate-200">
+                    <h4 class="text-xl font-bold text-center mb-4">成本估算器</h4>
+                    <div class="max-w-md mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="input-tokens" class="block text-sm font-medium text-gray-700">输入 Tokens (千)</label>
+                            <input type="number" id="input-tokens" value="1000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="output-tokens" class="block text-sm font-medium text-gray-700">输出 Tokens (千)</label>
+                            <input type="number" id="output-tokens" value="200" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm">
+                        </div>
+                    </div>
+                    <div id="cost-result" class="mt-4 text-center font-mono p-4 bg-slate-100 rounded-lg">
+                        
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <hr class="my-16 border-slate-200">
+
+        <section id="summary" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">最终裁决：你的技术栈需要 Kimi K2 吗？</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-slate-600">经过层层剖析，我们为您总结了 Kimi K2 的核心优劣势，并提供清晰的行动指南，帮助您做出明智的技术选型决策。</p>
+            </div>
+        
+            <div class="bg-white p-8 rounded-xl shadow-xl">
+                <h3 class="text-2xl font-bold text-center mb-8">核心优劣势一览</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                        <h4 class="text-xl font-bold text-green-800 mb-3">✅ 优势 (Strengths)</h4>
+                        <ul class="space-y-3 text-slate-700">
+                            <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">🚀</span><span><strong>顶级的 Agentic 编码者:</strong> 在自动化编码任务上，表现超越多数开源模型。</span></li>
+                            <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">💰</span><span><strong>极致的成本效益:</strong> 极具竞争力的价格，让大规模 Agentic 应用在经济上成为可能。</span></li>
+                            <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">⚡️</span><span><strong>快速的反应式执行:</strong> 高效处理定义明确的任务，是自动化工作流的理想引擎。</span></li>
+                            <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">📚</span><span><strong>卓越的信息整合者:</strong> 擅长执行多步骤搜索、搜集和信息整理类任务。</span></li>
+                        </ul>
+                    </div>
+                    <div class="bg-red-50 p-6 rounded-lg border border-red-200">
+                        <h4 class="text-xl font-bold text-red-800 mb-3">❌ 劣势 (Weaknesses)</h4>
+                        <ul class="space-y-3 text-slate-700">
+                            <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">🤔</span><span><strong>反射而非深思:</strong> 缺乏深度逻辑推理能力，不擅长处理模糊或复杂问题。</span></li>
+                            <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">⚙️</span><span><strong>执行层面有摩擦:</strong> 在调用某些底层工具（如文件IO）时可能不够稳定。</span></li>
+                            <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">🚧</span><span><strong>严格的内容过滤器:</strong> 内容安全策略相对保守，可能影响部分生成结果。</span></li>
+                            <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">🎨</span><span><strong>并非全能选手:</strong> 缺乏原生的音视频多模态处理能力。</span></li>
+                        </ul>
+                    </div>
+                </div>
+        
+                <div class="mt-10 pt-8 border-t border-slate-200">
+                     <h3 class="text-2xl font-bold text-center mb-4">行动指南：构建你的多模型策略</h3>
+                     <p class="text-center text-slate-600 max-w-3xl mx-auto">结论很明确：告别“一个模型打天下”的时代。明智的策略是构建一个灵活的、能够根据任务需求调用最合适模型的智能系统。Kimi K2 不是万能药，但它是一个强大、经济、高效的新引擎，是你构建未来 Agentic 应用不可或缺的一块基石。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-white mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-slate-400">
+            <p>交互式报告由 AI 生成，旨在将复杂的技术分析转化为易于理解的视觉体验。</p>
+            <p>基于月之暗面 (Moonshot AI) 及社区公开信息分析。</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const benchmarkData = {
+                labels: ['Kimi K2', 'GPT-4.1', 'Claude Sonnet 4', 'Claude Opus 4', 'Gemini 2.5 Flash', 'DeepSeek-V3', 'Qwen3-235B'],
+                datasets: {
+                    swe_bench: {
+                        label: 'SWE-bench (Agentic 编码) - 分数越高越好',
+                        data: [65.8, 54.6, 72.7, 72.5, 0, 38.8, 34.4],
+                    },
+                    live_code: {
+                        label: 'LiveCodeBench v6 - 分数越高越好',
+                        data: [53.7, 44.7, 48.5, 47.4, 44.7, 46.9, 37.0],
+                    },
+                    aider: {
+                        label: 'Aider-Polyglot (代码修复) - 分数越高越好',
+                        data: [60.0, 52.4, 56.4, 70.7, 44.0, 55.1, 61.8],
+                    },
+                    tool_use: {
+                        label: 'Tool Use (Tau2 retail) - 分数越高越好',
+                        data: [70.6, 74.8, 75.0, 81.8, 64.3, 69.1, 57.0],
+                    },
+                    math: {
+                        label: 'Math (MATH-500) - 分数越高越好',
+                        data: [97.4, 92.4, 94.0, 94.4, 95.4, 94.0, 91.2],
+                    },
+                    reasoning: {
+                        label: 'Reasoning (GPQA-Diamond) - 分数越高越好',
+                        data: [75.1, 66.3, 70.0, 74.9, 68.2, 68.4, 62.9],
+                    }
+                }
+            };
+            
+            const costData = {
+                 labels: ['Kimi K2', 'GPT-4o', 'Claude 3.5 Sonnet', 'Gemini 1.5 Pro', 'Qwen-Turbo'],
+                 prices: {
+                    'Kimi K2': { input: 0.55, output: 2.20 },
+                    'GPT-4o': { input: 5.00, output: 15.00 },
+                    'Claude 3.5 Sonnet': { input: 3.00, output: 15.00 },
+                    'Gemini 1.5 Pro': { input: 3.50, output: 10.50 },
+                    'Qwen-Turbo': { input: 0.0525, output: 0.21 },
+                 },
+                 datasets: [
+                    {
+                        label: '输入成本 ($/1M tokens)',
+                        data: [0.55, 5.00, 3.00, 3.50, 0.0525],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '输出成本 ($/1M tokens)',
+                        data: [2.20, 15.00, 15.00, 10.50, 0.21],
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                 ]
+            };
+
+            const techDetailsContent = {
+                moe: {
+                    title: '混合专家 (MoE) 架构',
+                    text: 'Kimi K2 的“1万亿参数”是其专家库的总规模。在处理任务时，它只会智能地激活一小部分（约320亿）参数参与计算。这种稀疏激活模式，使其在拥有巨大知识容量的同时，保持了极高的推理效率。'
+                },
+                muonclip: {
+                    title: 'MuonClip 优化器',
+                    text: '为解决“注意力发散”这一世界级难题，月之暗面自研了 MuonClip 优化器。它通过直接重新缩放关键权重矩阵，从源头控制注意力分数的规模，保证了超大规模模型训练的稳定性。'
+                },
+                pipeline: {
+                    title: 'Agentic 数据流水线',
+                    text: 'Kimi 的 Agentic 能力源于精心策划的“虚拟实习”。月之暗面构建了复杂的合成数据流水线，模拟了数千种工具在数百个领域的使用场景，让模型在训练中就学会了如何理解复杂指令并分解为 `ToolCall`。'
+                }
+            };
+
+            let benchmarkChartInstance;
+            const createBenchmarkChart = (metric) => {
+                const ctx = document.getElementById('benchmarkChart').getContext('2d');
+                if (benchmarkChartInstance) {
+                    benchmarkChartInstance.destroy();
+                }
+                benchmarkChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: benchmarkData.labels,
+                        datasets: [{
+                            ...benchmarkData.datasets[metric],
+                            backgroundColor: [
+                                'rgba(8, 145, 178, 0.6)', // cyan-600
+                                'rgba(100, 116, 139, 0.6)',
+                                'rgba(217, 119, 6, 0.6)',
+                                'rgba(217, 119, 6, 0.8)',
+                                'rgba(67, 56, 202, 0.6)',
+                                'rgba(22, 163, 74, 0.6)',
+                                'rgba(225, 29, 72, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(8, 145, 178, 1)',
+                                'rgba(100, 116, 139, 1)',
+                                'rgba(217, 119, 6, 1)',
+                                'rgba(217, 119, 6, 1)',
+                                'rgba(67, 56, 202, 1)',
+                                'rgba(22, 163, 74, 1)',
+                                'rgba(225, 29, 72, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '分数'
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+            
+            let costChartInstance;
+            const createCostChart = () => {
+                 const ctx = document.getElementById('costChart').getContext('2d');
+                 costChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: costData.labels,
+                        datasets: costData.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '美元 ($)'
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            document.getElementById('benchmark-select').addEventListener('change', (e) => {
+                createBenchmarkChart(e.target.value);
+            });
+            
+            const calculateCost = () => {
+                const inputTokensK = parseFloat(document.getElementById('input-tokens').value) || 0;
+                const outputTokensK = parseFloat(document.getElementById('output-tokens').value) || 0;
+                const resultDiv = document.getElementById('cost-result');
+                
+                let resultHTML = '<ul class="text-left space-y-2">';
+                for (const model in costData.prices) {
+                    const price = costData.prices[model];
+                    const totalCost = (inputTokensK / 1000 * price.input) + (outputTokensK / 1000 * price.output);
+                    resultHTML += `<li><strong>${model}:</strong> <span class="float-right">${totalCost.toFixed(4)} USD</span></li>`;
+                }
+                resultHTML += '</ul>';
+                resultDiv.innerHTML = resultHTML;
+            };
+
+            document.getElementById('input-tokens').addEventListener('input', calculateCost);
+            document.getElementById('output-tokens').addEventListener('input', calculateCost);
+
+            const techCards = document.querySelectorAll('.tech-card');
+            const techDetailBox = document.getElementById('tech-details');
+            techCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const techKey = card.dataset.tech;
+                    const content = techDetailsContent[techKey];
+
+                    techCards.forEach(c => c.classList.remove('border-cyan-500', 'scale-105'));
+                    card.classList.add('border-cyan-500', 'scale-105');
+
+                    techDetailBox.style.opacity = '0';
+                    setTimeout(() => {
+                        techDetailBox.innerHTML = `<h4 class="text-xl font-bold mb-2">${content.title}</h4><p class="text-slate-600 max-w-2xl mx-auto">${content.text}</p>`;
+                        techDetailBox.style.opacity = '1';
+                    }, 300);
+                });
+            });
+
+            const taskButtons = document.querySelectorAll('.task-btn');
+            const modelCards = document.querySelectorAll('.model-card');
+            taskButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const taskKey = button.dataset.task;
+                    
+                    taskButtons.forEach(btn => btn.classList.remove('bg-cyan-500', 'text-white'));
+                    button.classList.add('bg-cyan-500', 'text-white');
+
+                    modelCards.forEach(card => {
+                        card.classList.remove('border-cyan-500', 'shadow-lg', 'scale-105', 'bg-cyan-50');
+                        card.classList.add('border-gray-200');
+                    });
+                    const targetCard = document.getElementById(`card-${taskKey}`);
+                    if (targetCard) {
+                        targetCard.classList.add('border-cyan-500', 'shadow-lg', 'scale-105', 'bg-cyan-50');
+                        targetCard.classList.remove('border-gray-200');
+                    }
+                });
+            });
+
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
+            sections.forEach(section => observer.observe(section));
+
+            document.getElementById('mobile-nav').addEventListener('change', function() {
+                window.location.hash = this.value;
+            });
+
+            createBenchmarkChart('swe_bench');
+            createCostChart();
+            calculateCost();
+        });
+    </script>
+</body>
+</html>
