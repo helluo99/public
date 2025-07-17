@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能者多劳困境互动解决方案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Sky Blue -->
+    <!-- Application Structure Plan: The application is structured as a four-tab interactive journey: '诊断' (Diagnose), '重塑' (Reshape), '行动' (Act), and '图表' (Chart). This task-oriented structure transforms the linear report into a non-linear, exploratory tool. 'Diagnose' helps users understand the 'why' through an interactive diagram. 'Reshape' presents mindset shifts as digestible principle cards. 'Act' is the core toolkit, featuring a dynamic workload matrix and conversation scripts. The 'Chart' tab offers a powerful visual synthesis of the core problem and solution. This structure was chosen to guide the user from understanding to action, making the complex psychological and strategic concepts more accessible and actionable than a simple text document. -->
+    <!-- Visualization & Content Choices: 
+        1. Vicious Cycle Diagram (Diagnose Tab): Report Info (Boss's motives, employee's traps) -> Goal (Organize, Inform) -> Viz (Interactive diagram with clickable nodes built with HTML/Tailwind) -> Interaction (Clicking nodes reveals detailed text) -> Justification (Visually untangles the complex problem, making it easier to grasp than linear text) -> Method (Vanilla JS).
+        2. Principle Cards (Reshape Tab): Report Info (Mindset shift principles) -> Goal (Inform, Engage) -> Viz (Styled cards with hover effects) -> Interaction (Hover to highlight) -> Justification (Breaks down abstract concepts into appealing, memorable chunks) -> Method (HTML/Tailwind CSS).
+        3. Interactive Workload Matrix (Act Tab): Report Info (Priority Matrix example) -> Goal (Organize, Interact) -> Viz (HTML table with editable fields and an 'add task' button) -> Interaction (User can add/edit tasks directly in the browser) -> Justification (Transforms a static example into a practical, reusable tool, providing immediate utility) -> Method (Vanilla JS DOM manipulation).
+        4. Strategy Accordions (Act Tab): Report Info (Conversation scripts, boundary tactics) -> Goal (Inform, provide tools) -> Viz (Click-to-expand accordion sections) -> Interaction (Clicking headers reveals content) -> Justification (Keeps the UI clean and allows users to focus on one tactic at a time) -> Method (Vanilla JS).
+        5. 'State of Work' Radar Chart (Chart Tab): Report Info (Synthesized concept of overload vs. strategic work) -> Goal (Compare, Synthesize) -> Viz (Radar chart) -> Interaction (Buttons to toggle between 'Overload' and 'Strategic' views) -> Justification (Provides a powerful, at-a-glance visual summary of the entire transformation journey) -> Library (Chart.js).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; }
+        .tab-active { border-color: #0369a1; color: #0369a1; background-color: #f0f9ff; }
+        .tab-inactive { border-color: transparent; color: #475569; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">高效能人士的悖论</h1>
+            <p class="mt-2 text-lg text-slate-600">如何不再因你的才干而受罚，并重拾你的战略价值</p>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+            <nav class="mb-6 border-b border-slate-200">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                    <li class="mr-2">
+                        <button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg" data-tab="diagnose">第一步：诊断困境</button>
+                    </li>
+                    <li class="mr-2">
+                        <button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg" data-tab="reshape">第二步：重塑认知</button>
+                    </li>
+                    <li class="mr-2">
+                        <button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg" data-tab="action">第三步：制定行动</button>
+                    </li>
+                    <li>
+                        <button class="nav-tab inline-block p-4 border-b-2 rounded-t-lg" data-tab="chart">可视化分析</button>
+                    </li>
+                </ul>
+            </nav>
+
+            <main>
+                <!-- 诊断困境 Section -->
+                <div id="diagnose" class="content-section">
+                    <div class="prose max-w-none prose-slate">
+                        <h2 class="text-2xl font-bold mb-4">为什么你总是那个最忙的人？</h2>
+                        <p class="mb-6 text-slate-600">你的忙碌并非偶然，而是由外部环境（你的老板）和内在特质（你自己）共同作用的结果。理解这个“过劳循环”的成因，是打破它的第一步。点击下方节点，探索背后的深层原因。</p>
+                        
+                        <div class="grid md:grid-cols-2 gap-8 items-center bg-slate-50 p-6 rounded-lg">
+                            <div id="cycle-diagram" class="space-y-4 text-center">
+                                <div id="boss-node" class="bg-white p-4 rounded-lg shadow cursor-pointer border-2 border-transparent hover:border-sky-500 transition">
+                                    <h3 class="font-bold text-sky-800">老板的视角：鞭打快牛</h3>
+                                    <p class="text-sm text-slate-500">将工作交给最可靠的人，是规避风险的捷径。</p>
+                                </div>
+                                <div class="text-center text-2xl text-slate-400">↓↑</div>
+                                <div id="you-node" class="bg-white p-4 rounded-lg shadow cursor-pointer border-2 border-transparent hover:border-teal-500 transition">
+                                    <h3 class="font-bold text-teal-800">你的视角：优势陷阱</h3>
+                                    <p class="text-sm text-slate-500">“能力陷阱”与“老好人模式”的致命组合。</p>
+                                </div>
+                            </div>
+                            <div id="explanation-panel" class="bg-white p-6 rounded-lg shadow-inner min-h-[200px] transition-all duration-300">
+                                <div id="diagnose-default" class="text-slate-500">点击左侧的“老板”或“你的”视角，查看详细分析。</div>
+                                <div id="diagnose-boss" class="hidden">
+                                    <h4 class="font-bold text-lg text-sky-800 mb-2">洞察老板的内心世界</h4>
+                                    <p>在管理者看来，将紧急或重要的任务交给你，是一笔稳赚不赔的投资，是他们规避自身压力的最有效方式。这种过度依赖，其实也暴露了团队管理的系统性风险——即“单点故障”风险。将你的困境包装成帮助他优化团队、规避风险的战略性建议，是沟通的关键。</p>
+                                </div>
+                                <div id="diagnose-you" class="hidden">
+                                    <h4 class="font-bold text-lg text-teal-800 mb-2">解构你的内在驱动力</h4>
+                                    <ul class="list-disc pl-5 space-y-2">
+                                        <li><strong>能力陷阱：</strong> 当你把所有时间都投入到“当前”擅长的事上时，就失去了学习对“未来”发展更重要技能的机会。这是一种伪装成高效的停滞。</li>
+                                        <li><strong>老好人模式：</strong> 出于避免冲突、取悦他人的需求，你很难拒绝额外的请求，导致个人边界模糊。当你感到疲惫和愤怒时，正是内心在提醒你：边界已被侵犯。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 重塑认知 Section -->
+                <div id="reshape" class="content-section">
+                     <div class="prose max-w-none prose-slate">
+                        <h2 class="text-2xl font-bold mb-4">根本性的转变：从执行者到战略伙伴</h2>
+                        <p class="mb-6 text-slate-600">在你与老板对话之前，一场更重要的变革需要先在内心发生。你需要从根本上改变你看待自己角色、时间及价值的方式。以下是三个核心的认知重塑原则。</p>
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div class="bg-slate-50 p-6 rounded-lg shadow hover:shadow-xl transition-shadow">
+                                <h3 class="font-bold text-xl mb-2 text-slate-800">🎯 价值重定义</h3>
+                                <p>你的价值，不应由完成任务的数量来衡量，而应由你所做工作的战略性影响来定义。从“埋头做事”转变为“确保正确的事被出色完成”。</p>
+                            </div>
+                             <div class="bg-slate-50 p-6 rounded-lg shadow hover:shadow-xl transition-shadow">
+                                <h3 class="font-bold text-xl mb-2 text-slate-800">🏃 以行践思</h3>
+                                <p>真正的清晰认知，来自于尝试微小的、不同的行为，而非无休止的思考。通过“行动”来塑造新的思维方式，比如将熟悉的任务流程化，以便赋能他人。</p>
+                            </div>
+                             <div class="bg-slate-50 p-6 rounded-lg shadow hover:shadow-xl transition-shadow">
+                                <h3 class="font-bold text-xl mb-2 text-slate-800">🧭 校准罗盘</h3>
+                                <p>为自己设定清晰的、不容协商的“时间闸门”，坦诚评估并尊重自己有限的精力。给自己“许可”，允许自己休息，这是走出“老好人模式”的关键一步。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 制定行动 Section -->
+                <div id="action" class="content-section">
+                    <div class="prose max-w-none prose-slate">
+                        <h2 class="text-2xl font-bold mb-4">向上管理行动剧本</h2>
+                        <p class="mb-6 text-slate-600">完成了内在的认知重塑，现在进入外部行动阶段。这是一份详尽的指南，将指导你一步步重塑与老板的互动模式，最终掌控你的工作负荷。</p>
+
+                        <div class="accordion-item bg-white border border-slate-200 rounded-lg mb-4">
+                            <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-slate-50">
+                                <span>第一式：发起“透明度攻势”，制作你的工作负荷矩阵</span>
+                                <span class="accordion-icon transform transition-transform">▼</span>
+                            </button>
+                            <div class="accordion-content hidden p-4 border-t border-slate-200">
+                                <p class="mb-4">你最大的困境是辛劳“隐形”，因此无法被管理。解决方案是发起一场基于数据的透明度攻势。使用下面的工具，将主观的“我很忙”转变为客观的商业问题。这张表格是一个协作工具，用以开启关于资源配置和战略优先级的讨论。</p>
+                                <div class="overflow-x-auto">
+                                    <table id="workload-matrix" class="w-full text-sm text-left text-slate-500">
+                                        <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3">任务/项目</th>
+                                                <th scope="col" class="px-6 py-3">战略对齐</th>
+                                                <th scope="col" class="px-6 py-3">预估投入(小时)</th>
+                                                <th scope="col" class="px-6 py-3">截止日期</th>
+                                                <th scope="col" class="px-6 py-3">建议优先级</th>
+                                                <th scope="col" class="px-6 py-3">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="bg-white border-b">
+                                                <td class="px-6 py-4"><input type="text" value="Q4产品发布营销计划" class="w-full p-1 border rounded"></td>
+                                                <td class="px-6 py-4"><input type="text" value="公司Q4营收增长目标" class="w-full p-1 border rounded"></td>
+                                                <td class="px-6 py-4"><input type="number" value="40" class="w-20 p-1 border rounded"></td>
+                                                <td class="px-6 py-4"><input type="date" value="2025-10-31" class="w-full p-1 border rounded"></td>
+                                                <td class="px-6 py-4">
+                                                    <select class="w-full p-1 border rounded">
+                                                        <option>高</option>
+                                                        <option>中</option>
+                                                        <option>低</option>
+                                                    </select>
+                                                </td>
+                                                <td class="px-6 py-4"><button class="remove-task-btn text-red-500 hover:text-red-700 font-bold">删除</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button id="add-task-btn" class="mt-4 bg-sky-600 text-white font-bold py-2 px-4 rounded hover:bg-sky-700 transition">添加新任务</button>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item bg-white border border-slate-200 rounded-lg mb-4">
+                            <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-slate-50">
+                                <span>第二式：掌握“建设性同意”的艺术</span>
+                                 <span class="accordion-icon transform transition-transform">▼</span>
+                            </button>
+                            <div class="accordion-content hidden p-4 border-t border-slate-200">
+                                <p class="mb-2">用“是的，而且...”或“是的，如果...”来替代过去那个让你充满怨气的“好的”。这既表达了尊重，又指出了“时间有限”的客观事实，巧妙地将排序的责任交还给管理者。</p>
+                                <div class="bg-slate-100 p-4 rounded-lg">
+                                    <p class="font-mono text-slate-700">“好的老板，这个任务我完全可以接手。为了确保它能得到应有的重视，让我们一起看一下我目前的优先级列表。您认为它应该优先于项目X，还是我们应该把项目Y的截止日期向后推一推？”</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item bg-white border border-slate-200 rounded-lg mb-4">
+                            <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-slate-50">
+                                <span>第三式：捍卫你的“时间闸门”</span>
+                                 <span class="accordion-icon transform transition-transform">▼</span>
+                            </button>
+                            <div class="accordion-content hidden p-4 border-t border-slate-200">
+                                <p class="mb-2">对于非工作时间的沟通，采用“冷、缓、不”三步策略，持之以恒地重新训练他人对你的期望，为你宝贵的时间和精力筑起一道坚固的边界。</p>
+                                <ul class="list-disc pl-5 space-y-2">
+                                    <li><strong>冷回应 (Cold Response):</strong> 对非紧急信息只做简短回复，如“收到”。</li>
+                                    <li><strong>缓回应 (Slow Response):</strong> 刻意拉长回复非紧急信息的时间。</li>
+                                    <li><strong>不回应 (No Response):</strong> 真正不紧急的事，等到第二天上班再处理。</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 可视化分析 Section -->
+                <div id="chart" class="content-section">
+                    <div class="prose max-w-none prose-slate">
+                        <h2 class="text-2xl font-bold mb-4">工作状态转变可视化</h2>
+                        <p class="mb-6 text-slate-600">你的目标是从“过劳执行者”转变为“战略贡献者”。下面的雷达图直观地展示了这两种状态的区别。切换查看，明确你的转型方向。</p>
+                        <div class="text-center mb-4">
+                            <button id="view-overload" class="bg-red-500 text-white font-bold py-2 px-4 rounded mr-2">查看: 过劳状态</button>
+                            <button id="view-strategic" class="bg-green-500 text-white font-bold py-2 px-4 rounded">查看: 战略状态</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <footer class="text-center mt-8 text-sm text-slate-500">
+            <p>这是一个基于深度分析报告创建的互动工具，旨在帮助您掌控职业生涯。</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contentSections = document.querySelectorAll('.content-section');
+            const accordions = document.querySelectorAll('.accordion-item');
+
+            function switchTab(tabId) {
+                tabs.forEach(tab => {
+                    if (tab.dataset.tab === tabId) {
+                        tab.classList.add('tab-active');
+                        tab.classList.remove('tab-inactive');
+                    } else {
+                        tab.classList.remove('tab-active');
+                        tab.classList.add('tab-inactive');
+                    }
+                });
+
+                contentSections.forEach(section => {
+                    if (section.id === tabId) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+            }
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchTab(tab.dataset.tab);
+                });
+            });
+            
+            switchTab('diagnose');
+
+            accordions.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                const content = item.querySelector('.accordion-content');
+                const icon = item.querySelector('.accordion-icon');
+
+                header.addEventListener('click', () => {
+                    const isVisible = !content.classList.contains('hidden');
+                    content.classList.toggle('hidden');
+                    icon.classList.toggle('rotate-180', !isVisible);
+                });
+            });
+            
+            const diagnoseNodes = {
+                boss: document.getElementById('boss-node'),
+                you: document.getElementById('you-node')
+            };
+            const explanationPanel = document.getElementById('explanation-panel');
+            const explanationContents = {
+                default: document.getElementById('diagnose-default'),
+                boss: document.getElementById('diagnose-boss'),
+                you: document.getElementById('diagnose-you')
+            };
+
+            function showExplanation(type) {
+                Object.values(explanationContents).forEach(el => el.classList.add('hidden'));
+                explanationContents[type].classList.remove('hidden');
+                
+                Object.values(diagnoseNodes).forEach(node => node.classList.remove('border-sky-500', 'border-teal-500'));
+                if(diagnoseNodes[type]) {
+                    diagnoseNodes[type].classList.add(type === 'boss' ? 'border-sky-500' : 'border-teal-500');
+                }
+            }
+
+            diagnoseNodes.boss.addEventListener('click', () => showExplanation('boss'));
+            diagnoseNodes.you.addEventListener('click', () => showExplanation('you'));
+
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const workloadMatrixBody = document.querySelector('#workload-matrix tbody');
+
+            addTaskBtn.addEventListener('click', () => {
+                const newRow = document.createElement('tr');
+                newRow.className = 'bg-white border-b';
+                newRow.innerHTML = `
+                    <td class="px-6 py-4"><input type="text" placeholder="新任务名称" class="w-full p-1 border rounded"></td>
+                    <td class="px-6 py-4"><input type="text" placeholder="关联目标" class="w-full p-1 border rounded"></td>
+                    <td class="px-6 py-4"><input type="number" value="8" class="w-20 p-1 border rounded"></td>
+                    <td class="px-6 py-4"><input type="date" class="w-full p-1 border rounded"></td>
+                    <td class="px-6 py-4">
+                        <select class="w-full p-1 border rounded">
+                            <option>高</option>
+                            <option selected>中</option>
+                            <option>低</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4"><button class="remove-task-btn text-red-500 hover:text-red-700 font-bold">删除</button></td>
+                `;
+                workloadMatrixBody.appendChild(newRow);
+            });
+            
+            workloadMatrixBody.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-task-btn')) {
+                    e.target.closest('tr').remove();
+                }
+            });
+
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            const chartData = {
+                labels: ['具体执行', '战略思考', '赋能他人', '跨部门协作', '学习成长', '个人精力'],
+                datasets: [
+                    {
+                        label: '过劳状态',
+                        data: [9, 2, 1, 3, 2, 3],
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        pointBackgroundColor: 'rgb(239, 68, 68)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(239, 68, 68)'
+                    },
+                    {
+                        label: '战略状态',
+                        data: [6, 8, 7, 7, 8, 8],
+                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        pointBackgroundColor: 'rgb(34, 197, 94)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(34, 197, 94)'
+                    }
+                ]
+            };
+            const statusChart = new Chart(ctx, {
+                type: 'radar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: { line: { tension: 0.1, borderWidth: 2 } },
+                    scales: {
+                        r: {
+                            angleLines: { display: false },
+                            suggestedMin: 0,
+                            suggestedMax: 10,
+                            pointLabels: { font: { size: 12 } },
+                            ticks: {
+                                stepSize: 2,
+                                backdropColor: 'rgba(0,0,0,0)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.r !== null) {
+                                        label += context.parsed.r;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            function updateChart(view) {
+                statusChart.data.datasets[0].hidden = view !== 'overload';
+                statusChart.data.datasets[1].hidden = view !== 'strategic';
+                statusChart.update();
+            }
+
+            document.getElementById('view-overload').addEventListener('click', () => updateChart('overload'));
+            document.getElementById('view-strategic').addEventListener('click', () => updateChart('strategic'));
+
+            updateChart('overload');
+
+        });
+    </script>
+</body>
+</html>
